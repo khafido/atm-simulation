@@ -1,8 +1,11 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static java.lang.System.exit;
 
 public class Main {
 
@@ -17,7 +20,7 @@ public class Main {
         String accountNumber;
         String pin;
 
-        Integer withdrawAmount = 0;
+        String withdrawAmount = "0";
 
         boolean authenticated = false;
         boolean exit = false;
@@ -25,21 +28,19 @@ public class Main {
         while (!authenticated) {
             System.out.print("Enter Account Number: ");
             accountNumber = scanner.nextLine();
-            System.out.print("Enter PIN: ");
-            pin = scanner.nextLine();
-
             if (accountNumber.length() < 6){
                 System.out.println("\nAccount Number should have 6 digits length");
                 continue;
             }
-
-            if(pin.length() < 6){
-                System.out.println("\nPIN should have 6 digits length");
+            if (!accountNumber.matches("[0-9]+")) {
+                System.out.println("\nAccount Number should only contain numbers");
                 continue;
             }
 
-            if (!accountNumber.matches("[0-9]+")) {
-                System.out.println("\nAccount Number should only contain numbers");
+            System.out.print("Enter PIN: ");
+            pin = scanner.nextLine();
+            if(pin.length() < 6){
+                System.out.println("\nPIN should have 6 digits length");
                 continue;
             }
 
@@ -64,87 +65,176 @@ public class Main {
             }
         }
 
+        String choice = "0";
+        boolean skip = false;
         while (!exit) {
-
-            System.out.println("1. Withdraw");
-            System.out.println("2. Fund Transfer");
-            System.out.println("3. Exit");
-            System.out.print("Enter your choice: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            if (skip==false) {
+                System.out.println("1. Withdraw");
+                System.out.println("2. Fund Transfer");
+                System.out.println("3. Exit");
+                System.out.print("Enter your choice: ");
+                choice = scanner.nextLine();
+            }
+            boolean back = false;
 
             switch (choice) {
-                case 1:
-                    System.out.println("1. $10");
+                case "1":
+                    System.out.println("\n1. $10");
                     System.out.println("2. $50");
                     System.out.println("3. $100");
                     System.out.println("4. Other");
                     System.out.println("5. Back");
                     System.out.print("Enter your choice: ");
-                    int withdrawChoice = scanner.nextInt();
-                    scanner.nextLine();
+                    String withdrawChoice = scanner.nextLine();
 
                     switch (withdrawChoice) {
-                        case 1:
-                            withdrawAmount = 10;
+                        case "1":
+                            withdrawAmount = "10";
                             break;
-                        case 2:
-                            withdrawAmount = 50;
+                        case "2":
+                            withdrawAmount = "50";
                             break;
-                        case 3:
-                            withdrawAmount = 100;
+                        case "3":
+                            withdrawAmount = "100";
                             break;
-                        case 4:
-                            System.out.print("Enter amount: ");
-                            withdrawAmount = scanner.nextInt();
-                            scanner.nextLine();
+                        case "4":
+                            System.out.println("\nOther Withdraw");
+                            System.out.print("Enter amount: $");
+                            withdrawAmount = scanner.nextLine();
                             break;
-                        case 5:
+                        case "5":
+                            back = true;
+                            System.out.println("");
                             break;
                         default:
                             System.out.println("\nInvalid choice \n");
                             break;
                     }
 
-                    if (withdrawAmount > 0) {
-                        if (customer.getBalance() >= withdrawAmount) {
-                            customer.setBalance(customer.getBalance() - withdrawAmount);
-                            System.out.println("\nWithdrawal successful");
-                            System.out.println("New Balance: " + customer.getBalance() + "\n");
+                    if (!withdrawAmount.matches("[0-9]+")){
+                        System.out.println("\nInvalid amount");
+                        continue;
+                    }
+
+                    if (Integer.parseInt(withdrawAmount) % 10 != 0){
+                        System.out.println("\nInvalid amount\n");
+                        skip = true;
+                        choice = "1";
+                        continue;
+                    }
+
+                    if (Integer.parseInt(withdrawAmount) >= 10) {
+                        if (Integer.parseInt(withdrawAmount)<=1000) {
+                            if (customer.getBalance() >= Integer.parseInt(withdrawAmount)) {
+                                customer.setBalance(customer.getBalance() - Integer.parseInt(withdrawAmount));
+                                System.out.println("\nSummary");
+                                System.out.println("Date: " + new SimpleDateFormat("E, dd MMM yyyy HH:mm aaa").format(new Date()));
+                                System.out.println("Withdraw: $" + withdrawAmount);
+                                System.out.println("Balance: $" + customer.getBalance() + "\n");
+
+                                System.out.println("1. Transaction");
+                                System.out.println("2. Exit");
+                                System.out.print("Choose option: ");
+                                String afterWithdraw = scanner.nextLine();
+
+                                if (afterWithdraw.equalsIgnoreCase("2")){
+                                    exit = true;
+                                    // System.exit(0);
+                                } else {
+                                    System.out.println("");
+                                }
+                                skip = false;
+                            } else {
+                                System.out.println("\nInsufficient balance "+withdrawAmount+"\n");
+                                skip = true;
+                                choice = "1";
+                            }
                         } else {
-                            System.out.println("\nInsufficient balance\n");
+                            System.out.println("Maximum amount to withdraw is $1000");
+                            skip = true;
+                            choice = "1";
                         }
                     } else {
-                        System.out.println("\n Invalid amount");
+                        if (back==false)
+                        System.out.println("\nMinimum amount to withdraw is $10");
+                        skip = true;
+                        choice = "1";
                     }
                     break;
-                case 2:
-                    System.out.print("Enter amount: ");
-                    int transferAmount = scanner.nextInt();
-                    scanner.nextLine();
+                case "2":
                     System.out.print("Enter destination account number: ");
                     String destinationAccount = scanner.nextLine();
-                    customer.setBalance(customer.getBalance() - withdrawAmount);
+
+                    int number = new Random().nextInt(999999);
+                    String referencedNumber = String.format("%06d", number);
 
                     Customer destinationCustomer = customers.stream()
                             .filter(c -> c.getAccountNumber().equals(destinationAccount))
                             .findFirst()
                             .orElse(null);
 
-                    if (destinationCustomer != null) {
-                        if (customer.getBalance() >= transferAmount) {
-                            customer.setBalance(customer.getBalance() - transferAmount);
-                            destinationCustomer.setBalance(destinationCustomer.getBalance() + transferAmount);
-                            System.out.println("\nTransfer successful");
-                            System.out.println("New Balance: " + customer.getBalance() + "\n");
+                    if (destinationAccount.matches("[0-9]+") && destinationCustomer != null) {
+                        System.out.print("Enter transfer amount: $");
+                        String transferAmount = scanner.next();
+                        if (!transferAmount.matches("[0-9]+")){
+                            System.out.println("\nInvalid amount");
+                            continue;
+                        }
+                        scanner.nextLine();
+                        customer.setBalance(customer.getBalance() - Integer.parseInt(withdrawAmount));
+
+                        if (Integer.parseInt(transferAmount) > 0) {
+                            if (Integer.parseInt(transferAmount) <= 1000) {
+                                if (customer.getBalance() >= Integer.parseInt(transferAmount)) {
+                                    System.out.println("\nTransfer Confirmation");
+                                    System.out.println("Destination Account: " + destinationAccount);
+                                    System.out.println("Transfer Amount: $" + transferAmount);
+                                    System.out.println("Referenced Number: " + referencedNumber);
+
+                                    System.out.println("\n1. Confirm");
+                                    System.out.println("2. Cancel");
+                                    System.out.print("Choose option: ");
+                                    String confirmOpt = scanner.nextLine();
+                                    if (confirmOpt.equalsIgnoreCase("1")) {
+                                        customer.setBalance(customer.getBalance() - Integer.parseInt(transferAmount));
+                                        destinationCustomer.setBalance(destinationCustomer.getBalance() + Integer.parseInt(transferAmount));
+
+                                        System.out.println("\nFund Transfer Summary");
+                                        System.out.println("Destination Account: " + destinationAccount);
+                                        System.out.println("Transfer Amount: $" + transferAmount);
+                                        System.out.println("Referenced Number: " + referencedNumber);
+                                        System.out.println("Balance: $" + customer.getBalance());
+
+                                        System.out.println("1. Transaction");
+                                        System.out.println("2. Exit");
+                                        System.out.print("Choose option: ");
+                                        String afterWithdraw = scanner.nextLine();
+
+                                        if (afterWithdraw.equalsIgnoreCase("2")){
+                                            exit = true;
+                                            // System.exit(0);
+                                        } else {
+                                            System.out.println("");
+                                        }
+                                    }
+                                    skip = false;
+                                } else {
+                                    System.out.println("\nInsufficient balance "+transferAmount+"\n");
+                                    skip = true;
+                                }
+                            } else {
+                                System.out.println("Maximum amount to transfer is $1000");
+                            }
                         } else {
-                            System.out.println("\nInsufficient balance\n");
+                            System.out.println("Minimum amount to transfer is $1");
                         }
                     } else {
                         System.out.println("\nInvalid destination account number");
+                        skip = true;
+                        choice = "2";
                     }
                     break;
-                case 3:
+                case "3":
                     exit = true;
                     break;
                 default:
