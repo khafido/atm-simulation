@@ -1,9 +1,15 @@
-package com.company;
+package com.mitrais;
+
+import com.mitrais.entity.Account;
+import com.mitrais.repository.AccountRepository;
+import com.mitrais.repository.TransferRepository;
+import com.mitrais.repository.WithdrawRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
 
     private static final int CREDENTIAL_MAX_LENGTH = 6;
     private static final int MIN_WITHDRAW = 10;
@@ -16,8 +22,8 @@ public class Main {
 
     public static final String ONLY_NUMBER_REGEX = "[0-9]+";
 
-    private static final List<Account> accounts = new ArrayList<>();
-    private static Account account = new Account();
+    private static List<Account> accounts = new ArrayList<>();
+    private static Account loggedAccount = new Account();
     private static String accountNumber;
     private static String pin;
     private static boolean authenticated = false;
@@ -29,12 +35,13 @@ public class Main {
     private static boolean accountNumberInvalid = true;
     private static boolean pinInvalid = true;
 
-    static Scanner scanner = new Scanner(System.in);
     static Random randomize = new Random();
 
     public static void main(String[] args) {
-        accounts.add(new Account("John Doe", "012108", 100, "112233"));
-        accounts.add(new Account("Jane Doe", "932012", 30, "112244"));
+        WithdrawRepository.reset();
+        TransferRepository.reset();
+
+        accounts = AccountRepository.readFile();
 
         while (!authenticated) {
             if (login()) {
@@ -70,10 +77,16 @@ public class Main {
             pinInvalid = false;
         }
 
-        Account loggedAccount = findAccount();
-        if (loggedAccount != null) {
-            System.out.println("\nWelcome "+loggedAccount.getName());
-            account = loggedAccount;
+        loggedAccount = findAccount();
+
+        if (loggedAccount!=null) {
+//            if (loggedAccount.getName() != null) {
+                System.out.println("\nWelcome " + loggedAccount.getName());
+                exit = false;
+//            } else {
+//                resetAuthenticatedAccount();
+//                return false;
+//            }
         } else {
             resetAuthenticatedAccount();
             return false;
@@ -144,7 +157,6 @@ public class Main {
                 break;
             case LOGOUT:
                 authenticated = false;
-                exit = true;
                 break;
             default:
                 System.out.println("\nInvalid choice");
@@ -201,12 +213,12 @@ public class Main {
     private static void doWithdraw(String withdrawAmount) {
         if (Integer.parseInt(withdrawAmount) >= MIN_WITHDRAW && isMultiplyOfTen(withdrawAmount)) {
             if (Integer.parseInt(withdrawAmount) <= MAX_WITHDRAW) {
-                if (account.getBalance() >= Integer.parseInt(withdrawAmount)) {
-                    account.setBalance(account.getBalance() - Integer.parseInt(withdrawAmount));
+                if (loggedAccount.getBalance() >= Integer.parseInt(withdrawAmount)) {
+                    loggedAccount.setBalance(loggedAccount.getBalance() - Integer.parseInt(withdrawAmount));
                     System.out.println("\nSummary");
                     System.out.println("Date: " + new SimpleDateFormat("E, dd MMM yyyy HH:mm aaa").format(new Date()));
                     System.out.println("Withdraw: $" + withdrawAmount);
-                    System.out.println("Balance: $" + account.getBalance() + "\n");
+                    System.out.println("Balance: $" + loggedAccount.getBalance() + "\n");
 
                     System.out.println("1. Transaction");
                     System.out.println("2. Exit");
@@ -220,7 +232,7 @@ public class Main {
                     System.out.print("\n");
                 } else {
                     System.out.println("\nInsufficient balance $" + withdrawAmount);
-                    System.out.println("Your balance: $" + account.getBalance() + "\n");
+                    System.out.println("Your balance: $" + loggedAccount.getBalance() + "\n");
                 }
             } else {
                 System.out.println("\nMaximum amount to withdraw is $1000");
@@ -265,9 +277,9 @@ public class Main {
     }
 
     private static void checkBalance(String transferAmount, Account destinationAccount, String referencedNumber) {
-        if (account.getBalance() >= Integer.parseInt(transferAmount)) {
+        if (loggedAccount.getBalance() >= Integer.parseInt(transferAmount)) {
             System.out.println("\nTransfer Confirmation");
-            System.out.println("Destination Account: " + destinationAccount);
+            System.out.println("Destination Account: " + destinationAccount.getName());
             System.out.println("Transfer Amount: $" + transferAmount);
             System.out.println("Referenced Number: " + referencedNumber);
 
@@ -275,23 +287,23 @@ public class Main {
             System.out.println("2. Cancel");
             System.out.print("Choose option: ");
             String confirmOpt = scanner.nextLine();
-            confirmTransaction(confirmOpt, transferAmount, destinationAccount, referencedNumber);
+            confirmationTransaction(confirmOpt, transferAmount, destinationAccount, referencedNumber);
         } else {
             System.out.println("\nInsufficient balance " + transferAmount);
-            System.out.println("Your balance: $" + account.getBalance() + "\n");
+            System.out.println("Your balance: $" + loggedAccount.getBalance() + "\n");
         }
     }
 
-    private static void confirmTransaction(String confirmOpt, String transferAmount, Account destinationAccount, String referencedNumber) {
+    private static void confirmationTransaction(String confirmOpt, String transferAmount, Account destinationAccount, String referencedNumber) {
         if (confirmOpt.equalsIgnoreCase("1")) {
-            account.setBalance(account.getBalance() - Integer.parseInt(transferAmount));
+            loggedAccount.setBalance(loggedAccount.getBalance() - Integer.parseInt(transferAmount));
             destinationAccount.setBalance(destinationAccount.getBalance() + Integer.parseInt(transferAmount));
 
             System.out.println("\nFund Transfer Summary");
             System.out.println("Destination Account: " + destinationAccount.getAccountNumber());
             System.out.println("Transfer Amount: $" + transferAmount);
             System.out.println("Referenced Number: " + referencedNumber);
-            System.out.println("Balance: $" + account.getBalance());
+            System.out.println("Balance: $" + loggedAccount.getBalance());
 
             confirmationAfterTransaction();
         }
