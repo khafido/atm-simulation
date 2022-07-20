@@ -11,14 +11,14 @@ import java.util.UUID;
 public class WithdrawEntity {
     @Id
     private UUID id;
-    private UUID account;
+    private String account;
     private int amount;
     private LocalDateTime date;
 
     public WithdrawEntity() {
     }
 
-    public WithdrawEntity(String id, UUID account, int amount, LocalDateTime date) {
+    public WithdrawEntity(String id, String account, int amount, LocalDateTime date) {
         this.id = UUID.randomUUID();
         this.account = account;
         this.amount = amount;
@@ -33,11 +33,11 @@ public class WithdrawEntity {
         this.id = id;
     }
 
-    public UUID getAccount() {
+    public String getAccount() {
         return account;
     }
 
-    public void setAccount(UUID account) {
+    public void setAccount(String account) {
         this.account = account;
     }
 

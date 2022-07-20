@@ -11,14 +11,14 @@ import java.util.UUID;
 public class TransferEntity {
     @Id
     private UUID id;
-    private UUID origin;
-    private UUID destination;
+    private String origin;
+    private String destination;
     private int amount;
     private LocalDateTime date;
 
     public TransferEntity(){}
 
-    public TransferEntity(UUID origin, UUID destination, int amount, LocalDateTime date) {
+    public TransferEntity(String origin, String destination, int amount, LocalDateTime date) {
         this.id = UUID.randomUUID();
         this.origin = origin;
         this.destination = destination;
@@ -34,19 +34,19 @@ public class TransferEntity {
         this.id = id;
     }
 
-    public UUID getOrigin() {
+    public String getOrigin() {
         return origin;
     }
 
-    public void setOrigin(UUID origin) {
+    public void setOrigin(String origin) {
         this.origin = origin;
     }
 
-    public UUID getDestination() {
+    public String getDestination() {
         return destination;
     }
 
-    public void setDestination(UUID destination) {
+    public void setDestination(String destination) {
         this.destination = destination;
     }
 
