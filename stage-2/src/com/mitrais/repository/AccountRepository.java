@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 public class AccountRepository {
     private static List<Account> accounts = new ArrayList<>();
 
@@ -36,7 +38,7 @@ public class AccountRepository {
                         save(newAccount);
 
                         return newAccount;
-                    }).collect(Collectors.toList());
+                    }).collect(toList());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,7 +54,7 @@ public class AccountRepository {
     }
 
     public static Account findByAccountNumber(String accountNumber){
-        var result = accounts.stream().filter(v -> v.getAccountNumber().equalsIgnoreCase(accountNumber)).collect(Collectors.toList());
+        var result = accounts.stream().filter(v -> v.getAccountNumber().equalsIgnoreCase(accountNumber)).collect(toList());
 
         if (!result.isEmpty()){
             return result.get(0);
